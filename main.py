@@ -11,6 +11,7 @@ from datetime import datetime
 sys.setrecursionlimit(10000)
 
 ################# to do for 0.62
+#    add a heuristic like an A* algorythm to minimize number of terms
 #         search for jesus XD
 #    more data indexes shown in save result , 0 = bad for testing = doesnt show whats wrong plus too easy
 #    more data
