@@ -150,8 +150,9 @@ class mid_bracket_chunks:
         self.mathematical_functions = mathematical_functions
 
 class neuron:
-    def get_random_stuff(poynomial_bool = True , variable_bool = True, indices_bool = True, constant_bool = True , mathematical_function_bool = True):
+    def get_random_stuff(poynomial_bool = True , variable_bool = True, indices_bool = True, constant_bool = True , mathematical_function_bool = True ):
         #### this function is used to choose random terms, this function is usually used to start off our equation
+        
         cleaned_variables = copy.deepcopy(variables)
         cleaned_variables.remove(variable_to_calculate)
         var = "not set"; polynomial = "not set"; indices = "not set"; constant = "not set"; math_func = "not set";
@@ -379,7 +380,8 @@ class neuron:
         self.outer_bracket_chunks = out_cop
 
 
-    def __init__(self , parent_neuron = 0   ,neuron_num =0 , layer_num = 0  ):
+    def __init__(self , parent_neuron = 0   ,neuron_num =0 , layer_num = 0 , terms_regularizer = True):
+        self.terms_regularizer = terms_regularizer 
         if parent_neuron == 0:  #### if there is no parent, we have to create this neuron from scratch
             outer_mid_brackets, outer_polynomials, outer_indices , outer_constants , outer_mathematical_functions = [],[],[],[],[]
             for o in range(max_outer_bracket_terms):
@@ -482,16 +484,16 @@ class neuron:
                     deep_describe_math_symbols_inner += " ] , "
                 deep_describe_math_symbols_mid += " ]  , "
             deep_describe_math_symbols_outer += " ]  ,  "
-            print(deep_describe_txt_header)
-            print(deep_describe_txt_outer)
-            print(deep_describe_math_symbols_outer)
-            print(deep_describe_txt_mid)
-            print(deep_describe_math_symbols_mid)
-            print(deep_describe_txt_inner)
-            print(deep_describe_math_symbols_inner)
-            print(deep_describe_math_symbols_outer)
-            print(deep_describe_math_symbols_mid)
-            print(deep_describe_math_symbols_inner)
+#            print(deep_describe_txt_header)
+ #           print(deep_describe_txt_outer)
+  #          print(deep_describe_math_symbols_outer)
+   #         print(deep_describe_txt_mid)
+    #        print(deep_describe_math_symbols_mid)
+     #       print(deep_describe_txt_inner)
+      #      print(deep_describe_math_symbols_inner)
+       #     print(deep_describe_math_symbols_outer)
+        #    print(deep_describe_math_symbols_mid)
+         #   print(deep_describe_math_symbols_inner)
 ####################################################################################
         for m in range(len(self.outer_bracket_chunks.mid_brackets)):
             txt += " (  "+str(self.outer_bracket_chunks.polynomials[m])
@@ -673,6 +675,7 @@ class neuron:
                 print("  zero div error  ")
             self.describe_neuron(True)
             return " zero div error ";
+        
 
     def get_error_at_this_index(self, index):
         current_answer = self.perform_calculation_at_data_index(index)
@@ -707,6 +710,17 @@ class neuron:
         except OverflowError as theerror:
       #      print("if the error is too big to calculate then screw it")
             rmse = 99999999999999999999999999999999999999999
+
+        if self.terms_regularizer:    ### punish for many terms
+            for o in self.outer_bracket_chunks.mid_brackets:
+                rmse +=0.5
+                for m in o.inner_brackets:
+                    rmse +=0.5
+                    for i in m.polynomials:
+                            rmse +=0.5
+            
+          
+
         return rmse
 
 class Layer:
@@ -815,6 +829,9 @@ def save( this_best_neuron , this_rmse , ans , ans_exp, evol , layer_num , name 
     this_best_neuron = og_this_best_neuron
     print("saved")
 
+
+
+
 def run_function(proc = "single proce"):
     #### this is the function that actually runs
 
@@ -865,7 +882,7 @@ def run_function(proc = "single proce"):
                 save(this_best_neuron , this_rmse , ans , ans_exp, evol , layer_num_counter , str(proc)+ " = proc num          , perfect  rmse   , layer"+str(layer_num_counter)  , extra_detail = True )
 
 
-            if this_rmse < 1:
+            if this_rmse < 25:
                 evol = this_best_neuron.describe_neurons_evolution();
                 ans, ans_exp , iny, midy, outy = this_best_neuron.perform_calculation_at_data_index(0, True)
                 save(this_best_neuron , this_rmse , ans , ans_exp, evol , layer_num_counter ,  str(proc)+ " = proc num          , very good rmse  , layer"+str(layer_num_counter) , extra_detail = True )
@@ -881,7 +898,7 @@ def run_function(proc = "single proce"):
                     finaldf.to_csv( str(proc)+ " = proc num          , jesus it actually worked         this prediction on unseen data .csv")
                     raise Exception(" LOOK AT THIS!!!!!!!!!! GOOD RMSE AND ACCURATLY DESCRIBES UNSEEN DATA")
 
-            if len(this_best_neuron.outer_bracket_chunks.polynomials) == 0:
+            if len(this_best_neuron.outer_bracket_chunks.polynomials) < 6 :
                 print(" empty best neuron ")
                 BBB = 0
                 this_parent = this_best_neuron
@@ -907,17 +924,20 @@ def run_function(proc = "single proce"):
                 print("good rmse , improved by = "+str(last_rmse - this_rmse))
                 last_rmse = this_rmse
 
+
 if multiproccessed == False:
     run_function()
 
+
 if __name__ == "__main__":
-        processes = []
-        counter = 0
-        for proce in range(multiprocessing.cpu_count()):
-            counter += 1
-            p1 = Process( target = run_function  , args = [counter])
-            processes.append(p1)
-        for proc in processes:
-            proc.start()
-        for proc in processes:
-            proc.join()
+    processes = []
+    counter = 0
+    for proce in range(multiprocessing.cpu_count()):
+        counter += 1
+        p1 = Process( target = run_function  , args = [counter])
+        processes.append(p1)
+    for proc in processes:
+        proc.start()
+    for proc in processes:
+        proc.join()
+
