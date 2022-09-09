@@ -18,7 +18,7 @@ sys.setrecursionlimit(10000)
 
 
 ##### controls below
-multiproccessed = True
+multiproccessed = True 
 
 use_constants = False
 is_complex_data_included_in_dataset = False
@@ -379,9 +379,10 @@ class neuron:
             out_cop.constants[c] = 0
         self.outer_bracket_chunks = out_cop
 
-
-    def __init__(self , parent_neuron = 0   ,neuron_num =0 , layer_num = 0 , terms_regularizer = True):
-        self.terms_regularizer = terms_regularizer 
+                                                                                                  #    decimal_point_regularizer
+    def __init__(self , parent_neuron = 0   ,neuron_num =0 , layer_num = 0 , terms_regularizer = True, decimal_point_regularizer = True):
+        self.terms_regularizer = terms_regularizer
+        self.decimal_point_regularizer = decimal_point_regularizer
         if parent_neuron == 0:  #### if there is no parent, we have to create this neuron from scratch
             outer_mid_brackets, outer_polynomials, outer_indices , outer_constants , outer_mathematical_functions = [],[],[],[],[]
             for o in range(max_outer_bracket_terms):
@@ -543,7 +544,7 @@ class neuron:
         str1 = str(answer)+ "  predicted answer            data we wanted =  110"
         print(str1)
         all_data = old_data
-        return str1;
+        return str1 , answer;
 
     def perform_calculation_at_data_index(self , index , return_bits = False):
         # this function performs a single calculation , at a single index of the data
@@ -718,10 +719,23 @@ class neuron:
                     rmse +=0.5
                     for i in m.polynomials:
                             rmse +=0.5
-            
-          
-
+                            
+        if self.decimal_point_regularizer:
+            for o in self.outer_bracket_chunks.mid_brackets:   ####   punish for ridiculous polynomials (turn this off if youre trying to calculate constants)
+                for m in o.inner_brackets:
+                    for i in m.polynomials:
+                        for char in str(i):
+                            rmse +=0.01
+            for o in self.outer_bracket_chunks.mid_brackets:
+                for m in o.polynomials:
+                    for char in str(m):
+                        rmse +=0.01
+            for o in self.outer_bracket_chunks.polynomials:
+                for char in str(o):
+                    rmse +=0.01
         return rmse
+
+
 
 class Layer:
     def __init__(self , population, layer_num, parent_neuron = 0):
@@ -756,8 +770,8 @@ class Layer:
 
 
 def make_specific_neuron():
-##### to make a specific neuron for testing purposes
-##### its currently set up for              v = u+at
+##  ## to make a specific neuron for testing purposes
+##  ## its currently set up for              v = u+at
     mi_neuron = neuron(parent_neuron = 0 ,neuron_num = 0 ,  layer_num = 0)
     inner_u = inner_bracket_chunks([1],['u'],[1],[0],[])
     inner_a_t = inner_bracket_chunks([1,1],['a','t'],[1,1],[0,0],['*'])
@@ -829,9 +843,6 @@ def save( this_best_neuron , this_rmse , ans , ans_exp, evol , layer_num , name 
     this_best_neuron = og_this_best_neuron
     print("saved")
 
-
-
-
 def run_function(proc = "single proce"):
     #### this is the function that actually runs
 
@@ -881,24 +892,24 @@ def run_function(proc = "single proce"):
                 ans, ans_exp , iny, midy, outy = this_best_neuron.perform_calculation_at_data_index(0, True)
                 save(this_best_neuron , this_rmse , ans , ans_exp, evol , layer_num_counter , str(proc)+ " = proc num          , perfect  rmse   , layer"+str(layer_num_counter)  , extra_detail = True )
 
-
-            if this_rmse < 25:
+            if this_rmse < 20:
                 evol = this_best_neuron.describe_neurons_evolution();
                 ans, ans_exp , iny, midy, outy = this_best_neuron.perform_calculation_at_data_index(0, True)
                 save(this_best_neuron , this_rmse , ans , ans_exp, evol , layer_num_counter ,  str(proc)+ " = proc num          , very good rmse  , layer"+str(layer_num_counter) , extra_detail = True )
-                extra_ans = this_best_neuron.perform_calculation_on_unseen_data(all_data)
+                txt , extra_ans = this_best_neuron.perform_calculation_on_unseen_data(all_data)
                 finaldf = pd.DataFrame({' should be 110 ':[extra_ans] })
                 finaldf.to_csv( str(proc)+ " = proc num          ,  this prediction on unseen data .csv")
+                print(extra_ans)
                 if abs(110 - extra_ans) < 1:
                     evol = this_best_neuron.describe_neurons_evolution();
                     ans, ans_exp , iny, midy, outy = this_best_neuron.perform_calculation_at_data_index(0, True)
                     save(this_best_neuron , this_rmse , ans , ans_exp, evol , layer_num_counter ,  str(proc)+ " = proc num          ,    jesus it actually worked          very good rmse  , layer"+str(layer_num_counter) , extra_detail = True )
-                    extra_ans = this_best_neuron.perform_calculation_on_unseen_data(all_data)
+                    txt , extra_ans = this_best_neuron.perform_calculation_on_unseen_data(all_data)
                     finaldf = pd.DataFrame({' should be 110 ':[extra_ans] })
                     finaldf.to_csv( str(proc)+ " = proc num          , jesus it actually worked         this prediction on unseen data .csv")
                     raise Exception(" LOOK AT THIS!!!!!!!!!! GOOD RMSE AND ACCURATLY DESCRIBES UNSEEN DATA")
 
-            if len(this_best_neuron.outer_bracket_chunks.polynomials) < 6 :
+            if len(this_best_neuron.outer_bracket_chunks.polynomials) == 0:
                 print(" empty best neuron ")
                 BBB = 0
                 this_parent = this_best_neuron
@@ -924,10 +935,8 @@ def run_function(proc = "single proce"):
                 print("good rmse , improved by = "+str(last_rmse - this_rmse))
                 last_rmse = this_rmse
 
-
 if multiproccessed == False:
     run_function()
-
 
 if __name__ == "__main__":
     processes = []
