@@ -17,6 +17,6 @@ the best neuron is then chosen again and is the basis for the next generation.
 
 Technically this project has proven impossible since there are an infinite number of arbitrary equations to match any dataset .... 
 
-on one level technically it works. it does produce an equation that matches your data... however i put in suvat equations and it is impossible to reverse engineer an equation that will predict unseen data due to the infinite number of potential solutions
+on one level technically it works. it does produce an equation that matches your data (see example csv)... however i put in suvat equations and it is impossible to reverse engineer an equation that will predict unseen data due to the infinite number of potential solutions
 
 I tried using a regularizer to punish it for too many terms but its hard to cut down on infinite. 
