@@ -1,6 +1,6 @@
 This script will attempt to reverse engineer an equation from data provided to it. 
 
-The data at the top I am currently feeding in would match SUVAT equations which i hope to reverse engineer from the data alone.
+The data at the top, which I am currently feeding in, would match SUVAT equations which i hope to reverse engineer from the data alone.
 
 this is technically a form of genetic algorythm, a large sample of random equations are created (1 equation per neuron), then each of these equations are tested for error against the data.
 
